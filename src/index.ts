@@ -1,11 +1,20 @@
-import {RpcProvider} from 'starknet';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import router from './router';
 
-const {STARKNET_NODE_URL} = process.env;
+const app = express();
 
-const provider = new RpcProvider({
-  nodeUrl: STARKNET_NODE_URL || 'https://alpha4.starknet.io',
+app.use(cors());
+app.use(helmet());
+app.use(express.urlencoded({extended: false}));
+app.use(express.json());
+
+app.use('/', router);
+
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
+  console.info(`Express server started listening on port ${PORT}`);
 });
-
-(async () => {
-  console.log(await provider.getBlockNumber());
-})();
