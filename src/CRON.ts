@@ -1,14 +1,16 @@
-import {provider} from './Utils/Starknet';
+import {store} from './Redux';
+import {StarsActions, StarsState} from './Redux/Reducers/starsSlice';
+import {getAllStarsInfo} from './Utils/Starknet';
 
 const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
-let lastBlockNumber = 0;
-
 setInterval(async () => {
-  const blockNumber = await provider.getBlockNumber();
+  const stars = await getAllStarsInfo();
 
-  if (blockNumber > lastBlockNumber) {
-    // validate and process new block
-    lastBlockNumber = blockNumber;
-  }
+  const mappedStars: StarsState = {};
+  stars.forEach((star) => {
+    mappedStars[star.id] = star;
+  });
+
+  store.dispatch(StarsActions.replaceStars(mappedStars));
 }, INTERVAL_IN_SECONDS * 1000);
