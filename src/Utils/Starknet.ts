@@ -1,5 +1,5 @@
 import {Contract, defaultProvider, RpcProvider} from 'starknet';
-import EarlystarkersABI from '../ABIs/EarlystarkersAbi.json';
+import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
 
 const {STARKNET_NODE_URL, CONTRACT_ADDRESS} = process.env;
 
