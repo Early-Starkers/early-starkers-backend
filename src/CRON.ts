@@ -1,10 +1,10 @@
 import {store} from './Redux';
-import {StarsActions, StarsState} from './Redux/Reducers/starsSlice';
+import {StarsActions, type StarsState} from './Redux/Reducers/starsSlice';
 import {getAllStarsInfo} from './Utils/Starknet';
 
 const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
-setInterval(async () => {
+const CRONJob = async (): Promise<void> => {
   const stars = await getAllStarsInfo();
 
   const mappedStars: StarsState = {};
@@ -13,4 +13,10 @@ setInterval(async () => {
   });
 
   store.dispatch(StarsActions.replaceStars(mappedStars));
-}, INTERVAL_IN_SECONDS * 1000);
+};
+
+// Run the CRON job when started
+CRONJob();
+
+// Run the CRON job every {INTERVAL_IN_SECONDS} seconds
+setInterval(CRONJob, INTERVAL_IN_SECONDS * 1000);

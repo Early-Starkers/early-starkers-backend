@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import router from './router';
 
+import './CRON';
+
 const app = express();
 
 app.use(cors());
