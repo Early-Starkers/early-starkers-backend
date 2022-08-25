@@ -11,7 +11,8 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint:check": "eslint \"src/**/*.ts\"",
     "lint": "yarn lint:check --fix",
-    "precommit": "yarn format && yarn format:check && yarn lint:check"
+    "precommit": "yarn format && yarn format:check && yarn lint:check",
+    "postinstall": "tsc"
   },
   "license": "ISC",
   "dependencies": {
