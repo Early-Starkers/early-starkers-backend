@@ -15,4 +15,16 @@ Router.get('/', async (req, res) => {
   res.status(HTTPStatus.OK).send(Object.values(stars));
 });
 
+Router.get('/:id', async (req, res) => {
+  const {id} = req.params;
+  const {stars} = store.getState();
+
+  if (!id || !stars || !(id in stars)) {
+    res.status(HTTPStatus.NotFound).send({message: 'Star not found'});
+    return;
+  }
+
+  res.status(HTTPStatus.OK).send(stars[id]);
+});
+
 export default Router;
