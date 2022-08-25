@@ -4,6 +4,7 @@ import type {PayloadAction} from '@reduxjs/toolkit';
 type ID = string | number;
 
 type Star = {
+  id: ID;
   owner: string;
   name: string;
 };
