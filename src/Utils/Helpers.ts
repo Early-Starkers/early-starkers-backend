@@ -9,7 +9,7 @@ export const HexToAscii = (hex: string | number): string => {
   const splitted = hex.toString().match(/.{1,2}/g);
 
   if (splitted) {
-    return splitted.reduce((acc, curr) => String.fromCharCode(parseInt(curr, 16)), '');
+    return splitted.reduce((acc, curr) => acc + String.fromCharCode(parseInt(curr, 16)), '');
   }
 
   return '';
