@@ -1,4 +1,4 @@
-import {Contract, defaultProvider, number, RpcProvider} from 'starknet';
+import {Contract, number, RpcProvider} from 'starknet';
 import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
 import {HexToAscii} from './Helpers';
 
@@ -8,11 +8,7 @@ export const provider = new RpcProvider({
   nodeUrl: STARKNET_NODE_URL || 'https://alpha4.starknet.io',
 });
 
-export const contract = new Contract(
-  EarlystarkersABI as never,
-  CONTRACT_ADDRESS || '',
-  defaultProvider,
-);
+export const contract = new Contract(EarlystarkersABI as never, CONTRACT_ADDRESS || '', provider);
 
 export const getName = async (tokenId: number): Promise<string> => {
   const name = await contract.name_of([tokenId, '0']);
