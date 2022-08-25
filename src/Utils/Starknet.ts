@@ -1,4 +1,5 @@
 import {Contract, number, RpcProvider} from 'starknet';
+import BN from 'bn.js';
 import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
 import {HexToAscii} from './Helpers';
 
@@ -11,7 +12,7 @@ export const provider = new RpcProvider({
 export const contract = new Contract(EarlystarkersABI as never, CONTRACT_ADDRESS || '', provider);
 
 export const getName = async (tokenId: number): Promise<string> => {
-  const name = await contract.name_of([tokenId, '0']);
+  const name: BN = await contract.name_of([tokenId, '0']);
   const bn = number.toBN(name.toString());
   const hex = number.toHex(bn);
 
