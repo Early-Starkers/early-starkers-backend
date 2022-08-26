@@ -4,15 +4,31 @@ import {getAllStarsInfo} from './Utils/Starknet';
 
 const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
+let failedPreviousRun = false;
+
 const CRONJob = async (): Promise<void> => {
-  const stars = await getAllStarsInfo();
+  try {
+    const stars = await getAllStarsInfo();
 
-  const mappedStars: StarsState = {};
-  stars.forEach((star) => {
-    mappedStars[star.id] = star;
-  });
+    const mappedStars: StarsState = {};
+    stars.forEach((star) => {
+      mappedStars[star.id] = star;
+    });
 
-  store.dispatch(StarsActions.replaceStars(mappedStars));
+    store.dispatch(StarsActions.replaceStars(mappedStars));
+  } catch (_) {
+    // If failed again, don't try again for a while
+    if (failedPreviousRun) return;
+
+    failedPreviousRun = true;
+
+    // retry after 10 seconds
+    await new Promise((resolve) => {
+      setTimeout(resolve, 10 * 1000);
+    });
+
+    await CRONJob();
+  }
 };
 
 // Run the CRON job when started
