@@ -10,6 +10,8 @@ const CRONJob = async (): Promise<void> => {
   try {
     const stars = await getAllStarsInfo();
 
+    failedPreviousRun = false;
+
     const mappedStars: StarsState = {};
     stars.forEach((star) => {
       mappedStars[star.id] = star;
