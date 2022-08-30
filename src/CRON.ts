@@ -1,8 +1,9 @@
 import {store} from './Redux';
 import {StarsActions, type StarsState} from './Redux/Reducers/starsSlice';
+import {sleep} from './Utils/Helpers';
 import {getAllStarsInfo} from './Utils/Starknet';
 
-const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
+const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 600;
 
 let failedPreviousRun = false;
 
@@ -31,12 +32,10 @@ const CRONJob = async (): Promise<void> => {
 
     failedPreviousRun = true;
 
-    console.warn('CRON job failed, trying again in 10 seconds');
+    console.warn('CRON job failed, retrying the job again in 60 seconds');
 
-    // retry after 10 seconds
-    await new Promise((resolve) => {
-      setTimeout(resolve, 10 * 1000);
-    });
+    // retry after 60 seconds
+    await sleep(60);
 
     await CRONJob();
   }

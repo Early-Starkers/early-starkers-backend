@@ -27,3 +27,9 @@ export const AsciiToHex = (str: string): string => {
     .map((char) => Number(char.charCodeAt(0)).toString(16))
     .join('')}`;
 };
+
+export const sleep = (seconds: number): Promise<void> => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, seconds * 1000);
+  });
+};

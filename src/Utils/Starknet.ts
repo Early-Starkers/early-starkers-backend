@@ -1,7 +1,7 @@
 import {Contract, number, RpcProvider} from 'starknet';
 import BN from 'bn.js';
 import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
-import {HexToAscii} from './Helpers';
+import {HexToAscii, sleep} from './Helpers';
 
 const {STARKNET_NODE_URL, CONTRACT_ADDRESS} = process.env;
 
@@ -38,12 +38,12 @@ export const getLastId = async (): Promise<number> => {
   return parseInt(lastId.toString(), 10);
 };
 
-export const getAllStarsInfo = async (): Promise<
-  (Awaited<ReturnType<typeof getStarInfo>> & {id: number})[]
-> => {
+type GetAllStarsInfoReturnType = Awaited<ReturnType<typeof getStarInfo>> & {id: number};
+
+export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> => {
   const lastId = await getLastId();
 
-  return Promise.all(
+  const results = await Promise.allSettled(
     Array(lastId)
       .fill('')
       .map(async (_, index) => ({
@@ -51,4 +51,26 @@ export const getAllStarsInfo = async (): Promise<
         id: index + 1,
       })),
   );
+
+  if (results.some(({status}) => status === 'rejected')) {
+    console.warn('Some stars failed to be fetched, retrying those stars in 15 seconds');
+
+    // If some failed to get, wait for 15 seconds and retry those that failed
+    await sleep(15);
+
+    return Promise.all(
+      results.map(async (result, index) => {
+        if (result.status === 'rejected') {
+          return {
+            ...(await getStarInfo(index + 1)),
+            id: index + 1,
+          };
+        }
+
+        return result.value;
+      }),
+    );
+  }
+
+  return results as unknown as GetAllStarsInfoReturnType[];
 };
