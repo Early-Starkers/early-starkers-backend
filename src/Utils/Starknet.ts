@@ -66,8 +66,11 @@ export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> =>
     return Promise.all(
       results.map(async (result, index) => {
         if (result.status === 'rejected') {
+          const {name, owner} = await getStarInfo(index);
+
           return {
-            ...(await getStarInfo(index + 1)),
+            name,
+            owner: getChecksumAddress(owner),
             id: index + 1,
           };
         }
