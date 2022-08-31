@@ -1,4 +1,4 @@
-import {Contract, number, RpcProvider} from 'starknet';
+import {Contract, number, RpcProvider, getChecksumAddress} from 'starknet';
 import BN from 'bn.js';
 import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
 import {HexToAscii, sleep} from './Helpers';
@@ -46,10 +46,15 @@ export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> =>
   const results = await Promise.allSettled(
     Array(lastId)
       .fill('')
-      .map(async (_, index) => ({
-        ...(await getStarInfo(index + 1)),
-        id: index + 1,
-      })),
+      .map(async (_, index) => {
+        const {name, owner} = await getStarInfo(index);
+
+        return {
+          name,
+          owner: getChecksumAddress(owner),
+          id: index + 1,
+        };
+      }),
   );
 
   if (results.some(({status}) => status === 'rejected')) {
