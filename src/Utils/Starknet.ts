@@ -80,5 +80,7 @@ export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> =>
     );
   }
 
-  return results as unknown as GetAllStarsInfoReturnType[];
+  return (results as PromiseFulfilledResult<GetAllStarsInfoReturnType>[]).map(
+    (result) => result.value,
+  );
 };
