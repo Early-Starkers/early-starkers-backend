@@ -6,6 +6,6 @@ import Metadata from './Routes/Metadata';
 const Router = express.Router();
 
 Router.use('/stars', Stars);
-Router.use('/metadata', Metadata);
+Router.use('/', Metadata);
 
 export default Router;
