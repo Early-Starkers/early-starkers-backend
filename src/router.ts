@@ -2,7 +2,7 @@ import express from 'express';
 
 import Stars from './Routes/Stars';
 import Metadata from './Routes/Metadata';
-import Wl from "./Routes/Wl";
+import Wl from './Routes/Wl';
 
 const Router = express.Router();
 
