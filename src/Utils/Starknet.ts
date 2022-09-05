@@ -1,7 +1,7 @@
 import {Contract, number, RpcProvider, getChecksumAddress} from 'starknet';
 import BN from 'bn.js';
 import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
-import {HexToAscii, sleep} from './Helpers';
+import {HexToAscii} from './Helpers';
 
 const {STARKNET_NODE_URL_1, STARKNET_NODE_URL_2, STARKNET_NODE_URL_3, CONTRACT_ADDRESS} =
   process.env;
@@ -65,8 +65,6 @@ type GetAllStarsInfoReturnType = Awaited<ReturnType<typeof getStarInfo>> & {id: 
 export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> => {
   const lastId = (await getLastId()) - 1;
 
-  console.log(lastId);
-
   return Promise.all(
     Array(lastId)
       .fill('')
@@ -75,7 +73,7 @@ export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> =>
 
         return {
           name,
-          owner,
+          owner: getChecksumAddress(owner),
           id: index + 1,
         };
       }),
