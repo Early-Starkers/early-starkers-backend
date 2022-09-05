@@ -22,16 +22,11 @@ export const contract1 = new Contract(EarlystarkersABI as never, CONTRACT_ADDRES
 export const contract2 = new Contract(EarlystarkersABI as never, CONTRACT_ADDRESS || '', provider2);
 export const contract3 = new Contract(EarlystarkersABI as never, CONTRACT_ADDRESS || '', provider3);
 
-export const getContract = (): Contract => {
-  const random = Math.floor(Math.random() * 3);
+export const contracts: Contract[] = [contract1, contract2, contract3];
 
-  if (random === 0) return contract1;
-  if (random === 1) return contract2;
-  return contract3;
-};
+export const getContract = (id = 0): Contract => contracts[id % contracts.length];
 
-export const getName = async (tokenId: number): Promise<string> => {
-  const contract = getContract();
+export const getName = async (tokenId: number, contract: Contract): Promise<string> => {
   const name: BN = await contract.name_of([tokenId, '0']);
   const bn = number.toBN(name.toString());
   const hex = number.toHex(bn);
@@ -39,8 +34,7 @@ export const getName = async (tokenId: number): Promise<string> => {
   return HexToAscii(hex);
 };
 
-export const getOwner = async (tokenId: number): Promise<string> => {
-  const contract = getContract();
+export const getOwner = async (tokenId: number, contract: Contract): Promise<string> => {
   const owner = await contract.ownerOf([tokenId, '0']);
   const bn = number.toBN(owner.toString());
 
@@ -48,7 +42,12 @@ export const getOwner = async (tokenId: number): Promise<string> => {
 };
 
 export const getStarInfo = async (tokenId: number): Promise<{name: string; owner: string}> => {
-  const [name, owner] = await Promise.all([getName(tokenId), getOwner(tokenId)]);
+  const contract = getContract(tokenId);
+
+  const [name, owner] = await Promise.all([
+    getName(tokenId, contract),
+    getOwner(tokenId, contract),
+  ]);
 
   return {name, owner};
 };
@@ -71,8 +70,6 @@ export const getAllStarsInfo = async (
       .fill('')
       .map(async (_, index) => {
         const {name, owner} = await getStarInfo(index + start);
-
-        console.log(index);
 
         return {
           name,
