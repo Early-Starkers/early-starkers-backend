@@ -62,19 +62,22 @@ export const getLastId = async (): Promise<number> => {
 
 type GetAllStarsInfoReturnType = Awaited<ReturnType<typeof getStarInfo>> & {id: number};
 
-export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> => {
-  const lastId = (await getLastId()) - 1;
-
+export const getAllStarsInfo = async (
+  lastId: number,
+  start = 1,
+): Promise<GetAllStarsInfoReturnType[]> => {
   const results = await Promise.allSettled(
-    Array(lastId)
+    Array(lastId - start)
       .fill('')
       .map(async (_, index) => {
-        const {name, owner} = await getStarInfo(index + 1);
+        const {name, owner} = await getStarInfo(index + start);
+
+        console.log(index);
 
         return {
           name,
           owner: getChecksumAddress(owner),
-          id: index + 1,
+          id: index + start,
         };
       }),
   );
@@ -88,12 +91,12 @@ export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> =>
     return Promise.all(
       results.map(async (result, index) => {
         if (result.status === 'rejected') {
-          const {name, owner} = await getStarInfo(index + 1);
+          const {name, owner} = await getStarInfo(index + start);
 
           return {
             name,
             owner: getChecksumAddress(owner),
-            id: index + 1,
+            id: index + start,
           };
         }
 
