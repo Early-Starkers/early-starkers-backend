@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import router from './router';
 
-import './CRON';
+import './EventCRON';
 
 const app = express();
 
