@@ -14,17 +14,15 @@ const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
 type StarknetEvent = Omit<RPC.StarknetEmittedEvent, 'event'> & RPC.StarknetEvent;
 
-let lastBlockNumber = 0;
-
 const getEvents = async (
   keys: string[] = [],
   page = 0,
   allEvents: StarknetEvent[] = [],
 ): Promise<StarknetEvent[]> => {
   const response = await provider.getEvents({
+    keys,
     toBlock: 'pending',
     address: contract.address,
-    keys: ['0x1d7849c0f6c42b67ef46bfe871686aeac2aa524ff4c77793f2afbd412acbd54'],
     page_size: 1000,
     page_number: page,
   } as any);
@@ -39,7 +37,15 @@ const getEvents = async (
   return [...allEvents, ...(response.events as unknown as StarknetEvent[])];
 };
 
-// 99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9
+const getTransferEvents = async (): Promise<StarknetEvent[]> => {
+  const events = await getEvents([
+    '0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9',
+  ]);
+
+  return events
+    .filter((event) => event.data[0] !== '0x0')
+    .sort((a, b) => (a.block_number ?? Number.MAX_SAFE_INTEGER) - b.block_number);
+};
 
 const getMintEvents = async (): Promise<StarknetEvent[]> => {
   const events = await getEvents([
@@ -54,34 +60,41 @@ const getMintEvents = async (): Promise<StarknetEvent[]> => {
 };
 
 const CRONJob = async (): Promise<void> => {
-  const blockNumber = await provider.getBlockNumber();
+  console.info(`CRON job started at ${new Date()}`);
 
-  const fromBlock = lastBlockNumber;
-  lastBlockNumber = blockNumber;
+  const mintEvents = await getMintEvents();
 
-  if (blockNumber > fromBlock) {
-    console.info(`CRON job found new block ${blockNumber} at ${new Date()}`);
+  const transferEvents = await getTransferEvents();
 
-    const mintEvents = await getMintEvents();
+  const stars: StarsState = {};
 
-    const stars: StarsState = {};
+  mintEvents.forEach((event) => {
+    const id = parseInt(event.data[0], 16);
+    const owner = event.data[2];
 
-    mintEvents.forEach((event) => {
-      const id = event.data[0];
-      const owner = event.data[1];
+    // TODO: name
+    const name = '\u0000\u0000';
 
-      // TODO: name
-      const name = '\u0000\u0000';
+    stars[id] = {
+      id,
+      name,
+      owner: getChecksumAddress(owner),
+    };
+  });
 
-      stars[id] = {
-        id: parseInt(id, 16),
-        name,
-        owner: getChecksumAddress(owner),
-      };
-    });
+  transferEvents.forEach((event) => {
+    // 0 prev 1 new 2 id
+    const prevOwner = event.data[0];
+    const newOwner = event.data[1];
+    const id = parseInt(event.data[2], 16);
 
-    store.dispatch(StarsActions.replaceStars(stars));
-  }
+    stars[id] = {
+      ...stars[id],
+      owner: getChecksumAddress(newOwner),
+    };
+  });
+
+  store.dispatch(StarsActions.replaceStars(stars));
 
   console.info(`CRON job completed at ${new Date()}`);
 };

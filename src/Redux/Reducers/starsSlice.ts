@@ -1,15 +1,13 @@
 import {createSlice} from '@reduxjs/toolkit';
 import type {PayloadAction} from '@reduxjs/toolkit';
 
-type ID = string | number;
-
 type Star = {
-  id: ID;
+  id: number;
   owner: string;
   name: string;
 };
 
-export type StarsState = Record<ID, Star>;
+export type StarsState = Record<number, Star>;
 
 const initialState: StarsState = {};
 
@@ -17,11 +15,11 @@ export const starsSlice = createSlice({
   name: 'stars',
   initialState,
   reducers: {
-    addStar: (state, action: PayloadAction<{id: ID; star: Star}>) => {
+    addStar: (state, action: PayloadAction<{id: number; star: Star}>) => {
       state[action.payload.id] = action.payload.star;
     },
 
-    removeStar: (state, action: PayloadAction<ID>) => {
+    removeStar: (state, action: PayloadAction<number>) => {
       delete state[action.payload];
     },
 
