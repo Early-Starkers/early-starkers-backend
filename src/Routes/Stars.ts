@@ -8,7 +8,7 @@ Router.get('/', async (req, res) => {
   const {stars} = store.getState();
 
   if (!stars || Object.keys(stars).length === 0) {
-    res.status(HTTPStatus.NoContent).send([]);
+    res.status(HTTPStatus.OK).send([]);
     return;
   }
 
