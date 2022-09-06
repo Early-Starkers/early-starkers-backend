@@ -19,12 +19,14 @@ Router.get('/:id', async (req, res) => {
   const {id} = req.params;
   const {stars} = store.getState();
 
-  if (!id || !stars || !(id in stars)) {
+  const idInt = parseInt(id, 10);
+
+  if (!id || !idInt || !stars || !(idInt in stars)) {
     res.status(HTTPStatus.NotFound).send({message: 'Star not found'});
     return;
   }
 
-  res.status(HTTPStatus.OK).send(stars[id]);
+  res.status(HTTPStatus.OK).send(stars[idInt]);
 });
 
 export default Router;
