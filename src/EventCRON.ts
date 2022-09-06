@@ -2,13 +2,7 @@ import {getChecksumAddress} from 'starknet';
 import type {RPC} from 'starknet/dist/types/api';
 import {store} from './Redux';
 import {StarsActions, type StarsState} from './Redux/Reducers/starsSlice';
-import {sleep} from './Utils/Helpers';
-import {
-  getAllStarsInfo,
-  getLastId,
-  provider1 as provider,
-  contract1 as contract,
-} from './Utils/Starknet';
+import {provider1 as provider} from './Utils/Starknet';
 
 const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
@@ -22,7 +16,7 @@ const getEvents = async (
   const response = await provider.getEvents({
     keys,
     toBlock: 'pending',
-    address: contract.address,
+    address: process.env.CONTRACT_ADDRESS || '',
     page_size: 1000,
     page_number: page,
   } as any);
@@ -99,4 +93,8 @@ const CRONJob = async (): Promise<void> => {
   console.info(`CRON job completed at ${new Date()}`);
 };
 
+// Run the CRON job when started
 CRONJob();
+
+// Run the CRON job every {INTERVAL_IN_SECONDS} seconds
+setInterval(CRONJob, INTERVAL_IN_SECONDS * 1000);
