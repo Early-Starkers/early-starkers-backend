@@ -1,7 +1,7 @@
 import {Contract, number, RpcProvider, getChecksumAddress} from 'starknet';
 import BN from 'bn.js';
 import EarlystarkersABI from '../ABIs/EarlystarkersABI.json';
-import {HexToAscii} from './Helpers';
+import {HexToAscii, sleep} from './Helpers';
 
 const {STARKNET_NODE_URL_1, STARKNET_NODE_URL_2, STARKNET_NODE_URL_3, CONTRACT_ADDRESS} =
   process.env;
@@ -22,16 +22,11 @@ export const contract1 = new Contract(EarlystarkersABI as never, CONTRACT_ADDRES
 export const contract2 = new Contract(EarlystarkersABI as never, CONTRACT_ADDRESS || '', provider2);
 export const contract3 = new Contract(EarlystarkersABI as never, CONTRACT_ADDRESS || '', provider3);
 
-export const getContract = (): Contract => {
-  const random = Math.floor(Math.random() * 3);
+export const contracts: Contract[] = [contract1, contract2, contract3];
 
-  if (random === 0) return contract1;
-  if (random === 1) return contract2;
-  return contract3;
-};
+export const getContract = (id = 0): Contract => contracts[id % contracts.length];
 
-export const getName = async (tokenId: number): Promise<string> => {
-  const contract = getContract();
+export const getName = async (tokenId: number, contract: Contract): Promise<string> => {
   const name: BN = await contract.name_of([tokenId, '0']);
   const bn = number.toBN(name.toString());
   const hex = number.toHex(bn);
@@ -39,8 +34,7 @@ export const getName = async (tokenId: number): Promise<string> => {
   return HexToAscii(hex);
 };
 
-export const getOwner = async (tokenId: number): Promise<string> => {
-  const contract = getContract();
+export const getOwner = async (tokenId: number, contract: Contract): Promise<string> => {
   const owner = await contract.ownerOf([tokenId, '0']);
   const bn = number.toBN(owner.toString());
 
@@ -48,7 +42,12 @@ export const getOwner = async (tokenId: number): Promise<string> => {
 };
 
 export const getStarInfo = async (tokenId: number): Promise<{name: string; owner: string}> => {
-  const [name, owner] = await Promise.all([getName(tokenId), getOwner(tokenId)]);
+  const contract = getContract(tokenId);
+
+  const [name, owner] = await Promise.all([
+    getName(tokenId, contract),
+    getOwner(tokenId, contract),
+  ]);
 
   return {name, owner};
 };
@@ -62,20 +61,48 @@ export const getLastId = async (): Promise<number> => {
 
 type GetAllStarsInfoReturnType = Awaited<ReturnType<typeof getStarInfo>> & {id: number};
 
-export const getAllStarsInfo = async (): Promise<GetAllStarsInfoReturnType[]> => {
-  const lastId = (await getLastId()) - 1;
-
-  return Promise.all(
-    Array(lastId)
+export const getAllStarsInfo = async (
+  lastId: number,
+  start = 1,
+): Promise<GetAllStarsInfoReturnType[]> => {
+  const results = await Promise.allSettled(
+    Array(lastId - start)
       .fill('')
       .map(async (_, index) => {
-        const {name, owner} = await getStarInfo(index + 1);
+        const {name, owner} = await getStarInfo(index + start);
 
         return {
           name,
           owner: getChecksumAddress(owner),
-          id: index + 1,
+          id: index + start,
         };
       }),
+  );
+
+  if (results.some(({status}) => status === 'rejected')) {
+    console.warn('Some stars failed to be fetched, retrying those stars in 15 seconds');
+
+    // If some failed to get, wait for 15 seconds and retry those that failed
+    await sleep(15);
+
+    return Promise.all(
+      results.map(async (result, index) => {
+        if (result.status === 'rejected') {
+          const {name, owner} = await getStarInfo(index + start);
+
+          return {
+            name,
+            owner: getChecksumAddress(owner),
+            id: index + start,
+          };
+        }
+
+        return result.value;
+      }),
+    );
+  }
+
+  return (results as PromiseFulfilledResult<GetAllStarsInfoReturnType>[]).map(
+    (result) => result.value,
   );
 };
