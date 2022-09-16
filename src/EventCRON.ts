@@ -2,7 +2,7 @@ import {getChecksumAddress} from 'starknet';
 import type {RPC} from 'starknet/dist/types/api';
 import {store} from './Redux';
 import {StarsActions, type StarsState} from './Redux/Reducers/starsSlice';
-import {provider1 as provider} from './Utils/Starknet';
+import {provider} from './Utils/Starknet';
 
 const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
