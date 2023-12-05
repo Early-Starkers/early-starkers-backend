@@ -1,28 +1,27 @@
-import {getChecksumAddress} from 'starknet';
-import type {RPC} from 'starknet/dist/types/api';
+import {getChecksumAddress, type RPC} from 'starknet';
 import {store} from './Redux';
 import {StarsActions, type StarsState} from './Redux/Reducers/starsSlice';
 import {provider} from './Utils/Starknet';
 
 const INTERVAL_IN_SECONDS = Number(process.env.CRON_INTERVAL_IN_SECONDS) || 60;
 
-type StarknetEvent = Omit<RPC.StarknetEmittedEvent, 'event'> & RPC.StarknetEvent;
+type StarknetEvent = RPC.GetEventsResponse['events'][number];
 
 const getEvents = async (
-  keys: string[] = [],
-  page = 0,
+  keys: string[][] = [],
+  continuationToken = '',
   allEvents: StarknetEvent[] = [],
 ): Promise<StarknetEvent[]> => {
   const response = await provider.getEvents({
     keys,
-    toBlock: 'pending',
+    to_block: 'pending',
     address: process.env.CONTRACT_ADDRESS || '',
-    page_size: 1000,
-    page_number: page,
+    chunk_size: 1000,
+    continuation_token: continuationToken || undefined,
   } as any);
 
-  if (!response.is_last_page) {
-    return getEvents(keys, page + 1, [
+  if (response.continuation_token) {
+    return getEvents(keys, response.continuation_token, [
       ...allEvents,
       ...(response.events as unknown as StarknetEvent[]),
     ]);
@@ -33,7 +32,7 @@ const getEvents = async (
 
 const getTransferEvents = async (): Promise<StarknetEvent[]> => {
   const events = await getEvents([
-    '0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9',
+    ['0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9'],
   ]);
 
   return events
@@ -43,7 +42,7 @@ const getTransferEvents = async (): Promise<StarknetEvent[]> => {
 
 const getMintEvents = async (): Promise<StarknetEvent[]> => {
   const events = await getEvents([
-    '0x1d7849c0f6c42b67ef46bfe871686aeac2aa524ff4c77793f2afbd412acbd54',
+    ['0x1d7849c0f6c42b67ef46bfe871686aeac2aa524ff4c77793f2afbd412acbd54'],
   ]);
 
   return events.sort(
